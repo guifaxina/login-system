@@ -4,4 +4,6 @@ export interface IUser {
   name: string;
   password: string;
   createdAt: Date;
+  isActive: boolean;
+  activationCode: string;
 }

@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
-import { IUser } from "../interface";
+import { IUser } from "../utils/interface";
 import bcrypt from "bcrypt";
-import { randomBytes } from "node:crypto"
+import { randomBytes } from "node:crypto";
 import { createTransport } from "nodemailer";
 
 const prisma = new PrismaClient();
@@ -73,7 +73,7 @@ class UserController {
     return this.validateEmail(email) && this.validatePassword(password)
   }
 
-  private sendConfirmationEmail = async (email: string, receiverName: string): Promise<void | Error> => {
+  private sendConfirmationEmail = async (email: string, userName: string): Promise<void | Error> => {
     try {
       const userActivationCode = await prisma.user.findUnique({
         where: {
@@ -103,14 +103,14 @@ class UserController {
         to: email,
         subject: "Confirm Your Email Address",
         text: `
-        Dear ${receiverName},
+        Dear ${userName},
 
         Thank you for signing up for our service. 
         To complete your registration, we need to confirm your email address.
         
         Please click on the following link to verify your email address:
         
-        ${userActivationCode?.activationCode}
+        ${userActivationCode.activationCode}
         
         If you did not register for our service or did not request to verify your email address, please disregard this email.
         
@@ -125,7 +125,37 @@ class UserController {
       throw new Error("Failed to send confirmation email.")
     }
   }
-}
 
+  public verifyEmailAddress = async (req: Request, res: Response) => {
+    try {
+      const { activationCode } = req.params;
+      
+      const user = await prisma.user.findFirst({
+        where: {
+          activationCode: activationCode
+        }
+      });
+
+      if (user) {
+        await prisma.user.update({
+          where: { 
+            id: user.id
+          },
+          data: { 
+            isActive: true, 
+            activationCode: null
+          }
+        })
+      } else {
+        return res.status(400).json({ message: "Invalid activation code."});
+      }
+      
+      return res.status(200).json({ message: "Email address verified."});
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Something went wrong." });
+    }
+  }
+}
 
 export default new UserController();

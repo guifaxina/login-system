@@ -11,19 +11,19 @@ class ValidationController {
 
     next();
   }
-  private validatePassword = (password: string): Boolean => {
+  private validatePassword = (password: string): boolean => {
     const passwordRegex = /^(?=.*?[A-Z])(?=.*?[^\w\s])(?=.*?\d)(.{8,})$/;
     
     return passwordRegex.test(password);
   }
 
-  private validateEmail = (email: string): Boolean | Error => {
+  private validateEmail = (email: string): boolean => {
     const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
 
     return emailRegex.test(email);
   }
 
-  private validateCredentials = (email: string, password: string): Boolean | Error => {
+  private validateCredentials = (email: string, password: string): boolean => {
     return this.validateEmail(email) && this.validatePassword(password)
   }
 }

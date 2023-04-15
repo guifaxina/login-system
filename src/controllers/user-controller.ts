@@ -8,16 +8,11 @@ import { createTransport } from "nodemailer";
 const prisma = new PrismaClient();
 
 class UserController {
-  public createUser = async (req: Request, res: Response): Promise<Response> => {
+  public createAccount = async (req: Request, res: Response): Promise<Response> => {
     try {
     const user: IUser = req.body.data;
 
-    if (!this.validateCredentials(user.email, user.password)) {
-      return res.status(400).json({ message: "Invalid email or password." });
-    }
-
-    const hashedPassword = await this.hashPassword(user.password);
-    user.password = hashedPassword;
+    user.password = await this.hashPassword(user.password);
 
     user.activationCode = randomBytes(128).toString("base64url");
     
@@ -46,31 +41,6 @@ class UserController {
       console.log(err);
       throw new Error("Failed to encrypt password.");
     }
-  }
-
-  private validatePassword = (password: string): Boolean | Error => {
-    const passwordRegex = /^(?=.*?[A-Z])(?=.*?[^\w\s])(?=.*?\d)(.{8,})$/;
-    
-    try {
-      return passwordRegex.test(password)
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to validate password.")
-    }
-  }
-
-  private validateEmail = (email: string): Boolean | Error => {
-    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
-
-    try {
-      return emailRegex.test(email);
-    } catch (err) {
-      throw new Error("Failed to validate email address.");
-    }
-  }
-
-  private validateCredentials = (email: string, password: string): Boolean | Error => {
-    return this.validateEmail(email) && this.validatePassword(password)
   }
 
   private sendConfirmationEmail = async (email: string, userName: string): Promise<void | Error> => {
@@ -110,7 +80,7 @@ class UserController {
         
         Please click on the following link to verify your email address:
         
-        ${userActivationCode.activationCode}
+        http://localhost:3000/api/v1/verify/${userActivationCode.activationCode}
         
         If you did not register for our service or did not request to verify your email address, please disregard this email.
         
@@ -126,7 +96,7 @@ class UserController {
     }
   }
 
-  public verifyEmailAddress = async (req: Request, res: Response) => {
+  public verifyEmailAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { activationCode } = req.params;
       
@@ -147,10 +117,10 @@ class UserController {
           }
         })
       } else {
-        return res.status(400).json({ message: "Invalid activation code."});
+        return res.status(400).json({ message: "Invalid activation code." });
       }
       
-      return res.status(200).json({ message: "Email address verified."});
+      return res.status(200).json({ message: "Email address verified." });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ message: "Something went wrong." });

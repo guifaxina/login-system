@@ -1,14 +1,13 @@
 import { PrismaClient } from "@prisma/client";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { IUser } from "../utils/interface";
 import bcrypt from "bcrypt";
 import { randomBytes } from "node:crypto";
-import { createTransport } from "nodemailer";
 
 const prisma = new PrismaClient();
 
 class UserController {
-  public createAccount = async (req: Request, res: Response): Promise<Response> => {
+  public createAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
     const user: IUser = req.body.data;
 
@@ -16,7 +15,7 @@ class UserController {
 
     user.activationCode = randomBytes(128).toString("base64url");
     
-    const response = await prisma.user.create({ 
+    const userCreated = await prisma.user.create({ 
       data: user, 
       select: { 
         email: true,
@@ -25,12 +24,15 @@ class UserController {
       } 
     });
 
-    this.sendConfirmationEmail(user.email, user.name);
+    if (userCreated) {
+      next();
+      return res.status(200).json({ message: "Account created successfully, please verify your email address." })
+    } 
       
-    return res.status(201).json({ message: "User created successfully.", data: response });
+    return res.status(500).json({ message: "Failed to create user." });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ message: "Failed to create user." }); 
+      return res.status(500).json({ message: "Something went wrong." }); 
     }
   }
 
@@ -40,90 +42,6 @@ class UserController {
     } catch (err) {
       console.log(err);
       throw new Error("Failed to encrypt password.");
-    }
-  }
-
-  private sendConfirmationEmail = async (email: string, userName: string): Promise<void | Error> => {
-    try {
-      const userActivationCode = await prisma.user.findUnique({
-        where: {
-          email: email
-        },
-        select: {
-          activationCode: true
-        }
-      })
-
-      if (!userActivationCode?.activationCode) {
-        throw new Error("User does not have activation code.");
-      }
-
-      const transporter = createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.MAIL_USER,
-          pass: process.env.MAIL_PASS
-        }
-      })
-  
-      transporter.sendMail({
-        from: '"Guilherme Faxina" <gui.sfax@gmail.com>',
-        to: email,
-        subject: "Confirm Your Email Address",
-        text: `
-        Dear ${userName},
-
-        Thank you for signing up for our service. 
-        To complete your registration, we need to confirm your email address.
-        
-        Please click on the following link to verify your email address:
-        
-        http://localhost:3000/api/v1/verify/${userActivationCode.activationCode}
-        
-        If you did not register for our service or did not request to verify your email address, please disregard this email.
-        
-        Thank you for your time and we look forward to serving you.
-        
-        Best regards,
-        Guilherme Faxina Team.`,
-      })
-  
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to send confirmation email.")
-    }
-  }
-
-  public verifyEmailAddress = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const { activationCode } = req.params;
-      
-      const user = await prisma.user.findFirst({
-        where: {
-          activationCode: activationCode
-        }
-      });
-
-      if (user) {
-        await prisma.user.update({
-          where: { 
-            id: user.id
-          },
-          data: { 
-            isActive: true, 
-            activationCode: null
-          }
-        })
-      } else {
-        return res.status(400).json({ message: "Invalid activation code." });
-      }
-      
-      return res.status(200).json({ message: "Email address verified." });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Something went wrong." });
     }
   }
 }

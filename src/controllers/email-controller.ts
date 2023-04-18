@@ -1,8 +1,7 @@
-import { PrismaClient, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { createTransport } from "nodemailer";
 import { Request, Response } from "express";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prismaClient"
 
 class EmailController {
   public sendConfirmationEmail = async (req: Request, _: Response): Promise<void | Error> => {

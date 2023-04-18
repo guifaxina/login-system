@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { IUser } from "../utils/interface";
 import bcrypt from "bcrypt";
 import { randomBytes } from "node:crypto";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prismaClient"
 
 class UserController {
   public createAccount = async (req: Request, res: Response, next: NextFunction) => {

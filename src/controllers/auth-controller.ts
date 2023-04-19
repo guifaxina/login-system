@@ -13,22 +13,28 @@ class AuthController {
         },
         select: {
           password: true,
-          isActive: true
+          isActive: true,
         },
       });
-      
+
       if (!userAccount) {
-        res.status(404).json({ message: "Account not found." })
+        return res.status(404).json({ message: "Account not found." });
       } else if (!userAccount!.isActive) {
-        res.status(400).json({ message: "You must activate your account in order to log in" });
-      } 
+        return res.status(400).json({ message: "You must activate your account in order to log in" });
+      }
 
       const isPasswordCorrect = await bcrypt.compare(password, userAccount!.password);
 
-      isPasswordCorrect ? res.status(200) : res.status(500).json({ message: "Something went wrong" });
+      isPasswordCorrect
+        ? res.status(200).json({ message: "User logged in successfully." })
+        : res.status(500).json({ message: "Invalid email or password." });
     } catch (err) {
       console.log(err);
-      return res.status(500).json({ message: "Something went wrong." });
+      return res
+        .status(500)
+        .json({ message: "An unexpected error has occurred." });
     }
   };
 }
+
+export default new AuthController();

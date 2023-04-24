@@ -31,7 +31,7 @@ class AuthController {
 
       if (isPasswordCorrect) {
         const accessToken = jwt.sign(
-          userAccount.id.toString(),
+          { data: userAccount.id.toString() },
           process.env.ACCESS_TOKEN_SECRET as string,
           { expiresIn: "1h" }
         );

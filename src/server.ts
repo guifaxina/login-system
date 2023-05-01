@@ -7,7 +7,8 @@ const PORT = 3000;
 const app = express();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN_URL
+  origin: process.env.ORIGIN_URL,
+  exposedHeaders: ["x-access-token"]
 }))
 
 app.use(express.json());

@@ -25,7 +25,7 @@ class AuthorizationController {
 
       userExists ? res.status(200) : res.status(404).json({ message: "User not found." });
     })
-
+    next()
     return res.status(200)
   }
 }

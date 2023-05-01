@@ -31,13 +31,13 @@ class AuthController {
 
       if (isPasswordCorrect) {
         const accessToken = jwt.sign(
-          { data: userAccount.id.toString() },
+          { userId: userAccount.id.toString() },
           process.env.ACCESS_TOKEN_SECRET as string,
           { expiresIn: "1h" }
         );
 
         return res
-          .setHeader("X-Access-Token", `Bearer ${accessToken}`)
+          .setHeader("x-access-token", `Bearer ${accessToken}`)
           .sendStatus(200);
       }
 

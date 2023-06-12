@@ -58,9 +58,9 @@ class UserController {
     try {
       const { recoverCode } = req.params;
 
-      let { newPassword } = req.body.data;
+      let { password } = req.body;
 
-      newPassword = await bcrypt.hash(newPassword, 12);
+      password = await bcrypt.hash(password, 12);
 
       jwt.verify(
         recoverCode,
@@ -77,7 +77,7 @@ class UserController {
             },
             data: {
               password: {
-                set: newPassword,
+                set: password,
               },
             },
           });

@@ -92,11 +92,11 @@ class EmailController {
 
   public sendRecoverPasswordEmail = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { email } = req.body.data;
-
+      const { data } = req.body;
+      
       const user = await prisma.user.findUnique({
         where: {
-          email: email,
+          email: data,
         },
         select: {
           name: true,
@@ -115,14 +115,14 @@ class EmailController {
         });
 
         const recoverCode = jwt.sign(
-          { email: email },
+          { email: data },
           process.env.RECOVER_PASSWORD_SECRET as string,
-          { expiresIn: "15 minutes" } // Fifteen minutes
+          { expiresIn: "15 minutes" } 
         );
 
         transporter.sendMail({
           from: '"Guilherme Faxina" <faxina@contact.com>',
-          to: email,
+          to: data,
           subject: "Password Reset Request",
           text: `
         Dear ${user.name},
@@ -131,7 +131,7 @@ class EmailController {
         
         To reset your password, please click on the following link or copy and paste it into your browser:
 
-        http://localhost:3000/api/v1/recover-password/${recoverCode}
+        http://localhost:5173/reset-password/${recoverCode}/
 
         Please note that this link will expire in 15 minutes. If you do not reset your password within this time period, you will need to submit another request.
         

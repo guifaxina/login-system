@@ -13,9 +13,9 @@ router.post("/login", authController.login);
 
 router.get("/verify/:activationCode", emailController.verifyEmailAddress);
 
-router.get("/recover-password", emailController.sendRecoverPasswordEmail);
+router.post("/recover-password", emailController.sendRecoverPasswordEmail);
 
-router.get("/recover-password/:recoverCode", userController.resetPassword);
+router.post("/reset-password/:recoverCode", userController.resetPassword);
 
 router.get("/authorize", authorizationController.authorize);
 
